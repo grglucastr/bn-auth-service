@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: bn-auth-service
+  jackson:
+    time-zone: America/Sao_Paulo
