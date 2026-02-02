@@ -42,7 +42,7 @@ public class AuthController {
             // Force session creation so cookie is sent
             request.getSession(true);
 
-            return ResponseEntity.ok(new LoginResponse("Login successful!", login.username()));
+            return ResponseEntity.ok(new LoginResponse("Login successful!", login.username(), "token"));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Invalid username or password"));
