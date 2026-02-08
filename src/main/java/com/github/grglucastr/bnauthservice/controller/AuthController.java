@@ -3,18 +3,19 @@ package com.github.grglucastr.bnauthservice.controller;
 import com.github.grglucastr.bnauthservice.dtos.ErrorResponse;
 import com.github.grglucastr.bnauthservice.dtos.LoginRequest;
 import com.github.grglucastr.bnauthservice.dtos.LoginResponse;
+import com.github.grglucastr.bnauthservice.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -26,6 +27,8 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
+    private final UserDetailsService userDetailsService;
 
     @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> login(@RequestBody LoginRequest login, HttpServletRequest request) {
@@ -36,13 +39,14 @@ public class AuthController {
                             login.username(), login.password()
                     ));
 
-            // Stores the authenticated user in the current request
-            SecurityContextHolder.getContext().setAuthentication(authenticate);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(login.username());
 
-            // Force session creation so cookie is sent
-            request.getSession(true);
+            String token = jwtUtil.generateToken(userDetails);
 
-            return ResponseEntity.ok(new LoginResponse("Login successful!", login.username(), "token"));
+            log.info("User {} logged in successfully", userDetails.getUsername());
+
+
+            return ResponseEntity.ok(new LoginResponse("Login successful!", login.username(), token));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Invalid username or password"));
@@ -51,18 +55,7 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        // Check if actually authenticated (not anonymous)
-        if (authentication == null || !authentication.isAuthenticated() ||
-                authentication instanceof AnonymousAuthenticationToken) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        return ResponseEntity.ok(Map.of(
-                "username", authentication.getName(),
-                "authorities", authentication.getAuthorities()));
-
+        return ResponseEntity.ok(Map.of("message", "JWT validation coming next!"));
     }
 
 }
