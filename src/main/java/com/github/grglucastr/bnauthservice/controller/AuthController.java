@@ -35,7 +35,7 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest login, HttpServletRequest request) {
 
         try {
-            Authentication authenticate = authenticationManager
+            authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(
                             login.username(), login.password()
                     ));
@@ -59,8 +59,8 @@ public class AuthController {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if(authentication == null || !authentication.isAuthenticated()) {
-            return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         return ResponseEntity.ok(Map.of(
