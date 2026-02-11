@@ -1,0 +1,16 @@
+services:
+  pgserver:
+    image: 'postgres:18.1'
+    container_name: 'pgserver'
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: "secret123"
+      POSTGRES_USER: "bn"
+      POSTGRES_DB: "bnauth"
+    volumes:
+      - pgdata:/var/lib/postgresql
+
+volumes:
+  pgdata:
+    driver: local
