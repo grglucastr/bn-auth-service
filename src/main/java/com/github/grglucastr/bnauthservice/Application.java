@@ -11,11 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 
 import java.util.TimeZone;
 
-@SpringBootApplication(exclude = {
-        DataSourceAutoConfiguration.class,
-        DataSourceTransactionManagerAutoConfiguration.class,
-        HibernateJpaAutoConfiguration.class
-})
+@SpringBootApplication
 @EnableWebSecurity
 @EnableMethodSecurity
 public class Application {
