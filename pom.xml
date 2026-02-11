@@ -50,6 +50,14 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Postgres -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- end: Postgres -->
+
         <!-- JWT -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
