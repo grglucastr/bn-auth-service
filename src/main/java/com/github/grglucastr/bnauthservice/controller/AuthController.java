@@ -43,7 +43,7 @@ public class AuthController {
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(login.username());
 
-            String token = jwtUtil.generateToken(userDetails);
+            String token = jwtUtil.generateAccessToken(userDetails);
 
             log.info("User {} logged in successfully", userDetails.getUsername());
 
