@@ -18,6 +18,8 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.util.List;
+
 @Configuration
 public class SecurityConfig {
 
@@ -29,8 +31,14 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+
+        final String[] routesAllowed = new String[]{
+                "/api/v1/auth/login",
+                "/api/v1/auth/register"
+        };
+
         http.authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/login").permitAll()
+                        .requestMatchers(routesAllowed).permitAll()
                         .requestMatchers("/api/v1/posts/**").authenticated()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session

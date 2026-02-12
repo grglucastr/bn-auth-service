@@ -1,8 +1,8 @@
 package com.github.grglucastr.bnauthservice.controller;
 
-import com.github.grglucastr.bnauthservice.dtos.ErrorResponse;
-import com.github.grglucastr.bnauthservice.dtos.LoginRequest;
-import com.github.grglucastr.bnauthservice.dtos.LoginResponse;
+import com.github.grglucastr.bnauthservice.dtos.*;
+import com.github.grglucastr.bnauthservice.entity.User;
+import com.github.grglucastr.bnauthservice.service.UserService;
 import com.github.grglucastr.bnauthservice.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +30,7 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final UserService userService;
 
     @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> login(@RequestBody LoginRequest login, HttpServletRequest request) {
@@ -51,6 +52,27 @@ public class AuthController {
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Invalid username or password"));
+        }
+    }
+
+    @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        try {
+
+            User user = userService.registerUser(
+                    request.username(),
+                    request.email(),
+                    request.password()
+            );
+
+            log.info("User {} registered successfully", user.getUsername());
+
+            return ResponseEntity.ok(new RegisterResponse("User registered successfully!",
+                    user.getUsername(),
+                    user.getEmail()));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
         }
     }
 
