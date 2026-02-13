@@ -17,11 +17,11 @@ spring:
     hibernate:
       ddl-auto: update
 
-  jwt:
-    secret: myVerySecretKeyThatIsAtLeast256BitsLongForHS256Algorithm
-    access-token-expiration: 900000
-    refresh-token-expiration: 604800000
-    expiration: 86400000
+jwt:
+  secret: myVerySecretKeyThatIsAtLeast256BitsLongForHS256Algorithm
+  access-token-expiration: 900000
+  refresh-token-expiration: 604800000
+  expiration: 86400000
 
-  server:
-    port: 8080
+server:
+  port: 8080
