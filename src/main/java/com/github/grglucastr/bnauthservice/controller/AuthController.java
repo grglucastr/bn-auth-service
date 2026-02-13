@@ -1,7 +1,9 @@
 package com.github.grglucastr.bnauthservice.controller;
 
 import com.github.grglucastr.bnauthservice.dtos.*;
+import com.github.grglucastr.bnauthservice.entity.RefreshToken;
 import com.github.grglucastr.bnauthservice.entity.User;
+import com.github.grglucastr.bnauthservice.service.RefreshTokenService;
 import com.github.grglucastr.bnauthservice.service.UserService;
 import com.github.grglucastr.bnauthservice.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,6 +33,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
     private final UserService userService;
+    private final RefreshTokenService refreshTokenService;
 
     @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> login(@RequestBody LoginRequest login, HttpServletRequest request) {
@@ -44,14 +47,48 @@ public class AuthController {
             UserDetails userDetails = userDetailsService.loadUserByUsername(login.username());
 
             String token = jwtUtil.generateAccessToken(userDetails);
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
 
             log.info("User {} logged in successfully", userDetails.getUsername());
 
+            return ResponseEntity.ok(new LoginResponse(
+                    "Login successful!",
+                    login.username(),
+                    token,
+                    refreshToken.getToken()));
 
-            return ResponseEntity.ok(new LoginResponse("Login successful!", login.username(), token));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Invalid username or password"));
+        }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> request) {
+        try{
+            String refreshToken = request.get("refreshToken");
+
+            if(refreshToken == null || refreshToken.isEmpty()){
+                return ResponseEntity.badRequest()
+                        .body(new ErrorResponse("Refresh token is required"));
+            }
+
+            RefreshToken validRefreshToken = refreshTokenService.verifyRefreshToken(refreshToken);
+
+            UserDetails userDetails = userDetailsService.loadUserByUsername(
+                    validRefreshToken.getUser().getUsername());
+
+            String newAccessToken = jwtUtil.generateAccessToken(userDetails);
+
+            log.info("Access token refreshed for user: {}", userDetails.getUsername());
+
+            return ResponseEntity.ok(Map.of(
+                    "accessToken", newAccessToken,
+                    "message", "Token refreshed successfully"));
+
+        }catch (IllegalArgumentException e){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ErrorResponse(e.getMessage()));
         }
     }
 
