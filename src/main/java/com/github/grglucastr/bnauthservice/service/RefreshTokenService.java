@@ -45,6 +45,7 @@ public class RefreshTokenService {
         RefreshToken refreshToken = RefreshToken.builder()
                 .token(tokenString)
                 .user(user)
+                .revoked(Boolean.FALSE)
                 .expiresAt(LocalDateTime.now().plusSeconds(refreshTokenExpiration / 1000))
                 .build();
 
