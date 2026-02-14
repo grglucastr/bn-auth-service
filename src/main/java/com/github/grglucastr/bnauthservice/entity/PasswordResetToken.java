@@ -50,4 +50,16 @@ public class PasswordResetToken {
         createdAt = LocalDateTime.now();
     }
 
+    public boolean isExpired(){
+        return LocalDateTime.now().isAfter(expiresAt);
+    }
+
+    public boolean isValid(){
+        return !used && !isExpired();
+    }
+
+    public boolean isInvalid() {
+        return !isValid();
+    }
+
 }

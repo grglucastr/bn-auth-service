@@ -1,8 +1,18 @@
 package com.github.grglucastr.bnauthservice.controller;
 
-import com.github.grglucastr.bnauthservice.dtos.*;
+import com.github.grglucastr.bnauthservice.dtos.ErrorResponse;
+import com.github.grglucastr.bnauthservice.dtos.ForgotPasswordRequest;
+import com.github.grglucastr.bnauthservice.dtos.LoginRequest;
+import com.github.grglucastr.bnauthservice.dtos.LoginResponse;
+import com.github.grglucastr.bnauthservice.dtos.MessageResponse;
+import com.github.grglucastr.bnauthservice.dtos.RegisterRequest;
+import com.github.grglucastr.bnauthservice.dtos.RegisterResponse;
+import com.github.grglucastr.bnauthservice.dtos.ResetPasswordRequest;
+import com.github.grglucastr.bnauthservice.entity.PasswordResetToken;
 import com.github.grglucastr.bnauthservice.entity.RefreshToken;
 import com.github.grglucastr.bnauthservice.entity.User;
+import com.github.grglucastr.bnauthservice.service.EmailService;
+import com.github.grglucastr.bnauthservice.service.PasswordResetService;
 import com.github.grglucastr.bnauthservice.service.RefreshTokenService;
 import com.github.grglucastr.bnauthservice.service.UserService;
 import com.github.grglucastr.bnauthservice.util.JwtUtil;
@@ -19,7 +29,13 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
@@ -34,6 +50,8 @@ public class AuthController {
     private final UserDetailsService userDetailsService;
     private final UserService userService;
     private final RefreshTokenService refreshTokenService;
+    private final PasswordResetService passwordResetService;
+    private final EmailService emailService;
 
     @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> login(@RequestBody LoginRequest login, HttpServletRequest request) {
@@ -65,10 +83,10 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> request) {
-        try{
+        try {
             String refreshToken = request.get("refreshToken");
 
-            if(refreshToken == null || refreshToken.isEmpty()){
+            if (refreshToken == null || refreshToken.isEmpty()) {
                 return ResponseEntity.badRequest()
                         .body(new ErrorResponse("Refresh token is required"));
             }
@@ -86,7 +104,7 @@ public class AuthController {
                     "accessToken", newAccessToken,
                     "message", "Token refreshed successfully"));
 
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse(e.getMessage()));
         }
@@ -110,6 +128,72 @@ public class AuthController {
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
+    @PostMapping(value = "/forgot-password",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        try {
+
+            PasswordResetToken resetToken = passwordResetService
+                    .createPasswordResetToken(request.email());
+
+            emailService.sendPasswordResetEmail(request.email(), resetToken.getToken());
+
+            log.info("Password reset requested for email: {}", request.email());
+
+            return ResponseEntity.ok(new MessageResponse(
+                    "If your email exists in our system, you will receive a password password reset link"
+            ));
+
+        } catch (UsernameNotFoundException e) {
+            log.error("Password reset requested for non-existent email: {}", request.email());
+            return ResponseEntity.ok(new MessageResponse(
+                    "If your email exists in our system, you will receive a password reset link"
+            ));
+        }
+    }
+
+    @PostMapping(value = "/reset-password",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
+        try {
+
+            passwordResetService.resetPassword(request.token(), request.newPassword());
+
+            return ResponseEntity.ok(new MessageResponse(
+                    "Password has been reset successfully. You can login now with your new password."));
+
+        } catch (IllegalArgumentException e) {
+            log.error("Password reset failed: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse(e.getMessage()));
+
+        }
+    }
+
+    @GetMapping(value = "/verify-reset-token",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> verifyResetToken(@RequestParam String token) {
+        try {
+            PasswordResetToken resetToken = passwordResetService.verifyToken(token);
+
+            return ResponseEntity.ok(Map.of(
+                    "valild", true,
+                    "email", resetToken.getUser().getEmail(),
+                    "expiresAt", resetToken.getExpiresAt()
+            ));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of(
+                            "valid", false,
+                            "error", e.getMessage()
+                    ));
         }
     }
 
