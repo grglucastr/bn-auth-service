@@ -53,7 +53,9 @@ public class AuthController {
     private final PasswordResetService passwordResetService;
     private final EmailService emailService;
 
-    @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/login",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> login(@RequestBody LoginRequest login, HttpServletRequest request) {
 
         try {
@@ -81,7 +83,9 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/refresh")
+    @PostMapping(value = "/refresh",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> request) {
         try {
             String refreshToken = request.get("refreshToken");
@@ -110,7 +114,9 @@ public class AuthController {
         }
     }
 
-    @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/register",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
 
@@ -197,7 +203,7 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/me")
+    @GetMapping(value = "/me", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCurrentUser() {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
