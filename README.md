@@ -6,7 +6,10 @@ Backend service to provide authorization and authentication to your RESTful endp
 - Register User
 - Login
 - Refresh Token
-- Forgot Password Flow (Request Reset and Reset Password)
+- Role-Based Authorization
+- PostgreSQL Database Integration (JPA, Hibernate)
+- Password Recovery Flow
+- E-mail simulation
 
 ### Stateless
 The project uses JSON Web Token (JWT) and the authentication/authorization are stateless. 
