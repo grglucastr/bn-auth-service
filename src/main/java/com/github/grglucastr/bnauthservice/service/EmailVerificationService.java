@@ -25,7 +25,7 @@ public class EmailVerificationService {
     @Transactional
     public EmailVerificationToken createVerificationToken(User user) {
         // Delete any existing verification tokens for this user
-        verificationTokenRepository.deleteByUser(user);
+        verificationTokenRepository.deleteByUserId(user.getId());
 
         String token = UUID.randomUUID().toString();
 
