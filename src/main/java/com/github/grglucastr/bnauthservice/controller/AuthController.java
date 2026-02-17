@@ -18,7 +18,6 @@ import com.github.grglucastr.bnauthservice.service.PasswordResetService;
 import com.github.grglucastr.bnauthservice.service.RefreshTokenService;
 import com.github.grglucastr.bnauthservice.service.UserService;
 import com.github.grglucastr.bnauthservice.util.JwtUtil;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -59,7 +58,7 @@ public class AuthController {
     @PostMapping(value = "/login",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> login(@RequestBody LoginRequest login, HttpServletRequest request) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest login) {
 
         try {
             authenticationManager
@@ -81,8 +80,13 @@ public class AuthController {
                     refreshToken.getToken()));
 
         } catch (AuthenticationException e) {
+            log.error("Login failed for user: {}", login.username());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Invalid username or password"));
+        }catch(Exception e) {
+            log.error("Login failed for user {}: {}", login.username(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ErrorResponse("Account not verified. Please check your email."));
         }
     }
 
