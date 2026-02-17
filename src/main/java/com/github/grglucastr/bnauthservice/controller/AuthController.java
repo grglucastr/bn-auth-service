@@ -8,10 +8,12 @@ import com.github.grglucastr.bnauthservice.dtos.MessageResponse;
 import com.github.grglucastr.bnauthservice.dtos.RegisterRequest;
 import com.github.grglucastr.bnauthservice.dtos.RegisterResponse;
 import com.github.grglucastr.bnauthservice.dtos.ResetPasswordRequest;
+import com.github.grglucastr.bnauthservice.entity.EmailVerificationToken;
 import com.github.grglucastr.bnauthservice.entity.PasswordResetToken;
 import com.github.grglucastr.bnauthservice.entity.RefreshToken;
 import com.github.grglucastr.bnauthservice.entity.User;
 import com.github.grglucastr.bnauthservice.service.EmailService;
+import com.github.grglucastr.bnauthservice.service.EmailVerificationService;
 import com.github.grglucastr.bnauthservice.service.PasswordResetService;
 import com.github.grglucastr.bnauthservice.service.RefreshTokenService;
 import com.github.grglucastr.bnauthservice.service.UserService;
@@ -52,6 +54,7 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
     private final PasswordResetService passwordResetService;
     private final EmailService emailService;
+    private final EmailVerificationService emailVerificationService;
 
     @PostMapping(value = "/login",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -119,12 +122,17 @@ public class AuthController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
-
             User user = userService.registerUser(
                     request.username(),
                     request.email(),
                     request.password()
             );
+
+            // Create verification token
+            EmailVerificationToken verificationToken = emailVerificationService.createVerificationToken(user);
+
+            // Send verification email
+            emailService.sendVerificationEmail(user.getEmail(), verificationToken.getToken());
 
             log.info("User {} registered successfully", user.getUsername());
 
@@ -133,7 +141,8 @@ public class AuthController {
                     user.getEmail()));
 
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse(e.getMessage()));
         }
     }
 
@@ -202,6 +211,46 @@ public class AuthController {
                     ));
         }
     }
+
+
+    @GetMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+        try {
+            emailVerificationService.verifyEmail(token);
+
+            return ResponseEntity.ok(new MessageResponse(
+                    "Email verified successfully! You can now login."));
+
+        } catch (IllegalArgumentException e) {
+            log.error("Email verification failed: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<?> resendVerification(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+
+            if (email == null || email.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(new ErrorResponse("Email is required."));
+            }
+
+            EmailVerificationToken verificationToken = emailVerificationService.resendVerificationEmail(email);
+            emailService.sendVerificationEmail(email, verificationToken.getToken());
+
+            return ResponseEntity.ok(new MessageResponse(
+                    "Verification email has been resent. Please check your inbox."
+            ));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
 
     @GetMapping(value = "/me", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCurrentUser() {
