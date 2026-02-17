@@ -212,7 +212,6 @@ public class AuthController {
         }
     }
 
-
     @GetMapping("/verify-email")
     public ResponseEntity<?> verifyEmail(@RequestParam String token) {
         try {
@@ -250,7 +249,6 @@ public class AuthController {
                     .body(new ErrorResponse(e.getMessage()));
         }
     }
-
 
     @GetMapping(value = "/me", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCurrentUser() {
