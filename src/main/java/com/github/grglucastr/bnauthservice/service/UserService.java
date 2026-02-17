@@ -34,7 +34,7 @@ public class UserService {
                 .email(email)
                 .password(passwordEncoder.encode(password))
                 .roles(Set.of("USER"))
-                .enabled(true)
+                .enabled(false)
                 .build();
 
         User userSaved = userRepository.save(user);
