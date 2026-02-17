@@ -30,7 +30,7 @@ public class EmailService {
         String verificationLink = "http://localhost:8080/api/v1/auth/verify-email?token=" + verificationToken;
 
         log.info("=".repeat(80));
-        log.info("📧 PASSWORD RESET MAIL (Simulated)");
+        log.info("📧 EMAIL VERIFICATION (Simulated)");
         log.info("To: {}", email);
         log.info("Subject: Verify Your Email Address");
         log.info("");
