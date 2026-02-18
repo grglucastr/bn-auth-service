@@ -34,6 +34,7 @@ public class LogoutService {
         log.info("User {} logged out successfully", username);
     }
 
+    @Transactional
     public void logoutFromAllDevices(String token){
         String username = jwtUtil.extractUsername(token);
 
