@@ -12,13 +12,11 @@ import com.github.grglucastr.bnauthservice.entity.EmailVerificationToken;
 import com.github.grglucastr.bnauthservice.entity.PasswordResetToken;
 import com.github.grglucastr.bnauthservice.entity.RefreshToken;
 import com.github.grglucastr.bnauthservice.entity.User;
-import com.github.grglucastr.bnauthservice.repository.RefreshTokenRepository;
-import com.github.grglucastr.bnauthservice.repository.UserRepository;
 import com.github.grglucastr.bnauthservice.service.EmailService;
 import com.github.grglucastr.bnauthservice.service.EmailVerificationService;
+import com.github.grglucastr.bnauthservice.service.LogoutService;
 import com.github.grglucastr.bnauthservice.service.PasswordResetService;
 import com.github.grglucastr.bnauthservice.service.RefreshTokenService;
-import com.github.grglucastr.bnauthservice.service.TokenBlackListService;
 import com.github.grglucastr.bnauthservice.service.UserService;
 import com.github.grglucastr.bnauthservice.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -58,9 +56,7 @@ public class AuthController {
     private final PasswordResetService passwordResetService;
     private final EmailService emailService;
     private final EmailVerificationService emailVerificationService;
-    private final TokenBlackListService tokenBlackListService;
-    private final UserRepository userRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final LogoutService logoutService;
 
     @PostMapping(value = "/login",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -267,7 +263,7 @@ public class AuthController {
     @PostMapping(value = "/logout",
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> logout(HttpServletRequest request) {
-        try{
+        try {
             String authHeader = request.getHeader("Authorization");
 
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -276,21 +272,10 @@ public class AuthController {
             }
 
             String token = authHeader.substring(7);
-
-            //Blacklist the access token
-            tokenBlackListService.blacklistToken(token);
-
-            // Revoke all refresh tokens for this user
-            String username = jwtUtil.extractUsername(token);
-            User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-            refreshTokenRepository.deleteByUser(user);
-
-            log.info("User {} logged out successfully", username);
+            logoutService.logout(token);
 
             return ResponseEntity.ok(new MessageResponse("Logged out successfully"));
-        }catch(Exception e){
+        } catch (Exception e) {
             log.error("Logout failed: {}", e.getMessage());
             return ResponseEntity.internalServerError()
                     .body(new ErrorResponse("Logout failed"));
@@ -300,7 +285,7 @@ public class AuthController {
     @PostMapping(value = "/logout-all",
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> logoutFromAllDevices(HttpServletRequest request) {
-        try{
+        try {
             String authHeader = request.getHeader("Authorization");
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 return ResponseEntity.badRequest()
@@ -308,24 +293,14 @@ public class AuthController {
             }
 
             String token = authHeader.substring(7);
-            String username = jwtUtil.extractUsername(token);
-
-            // Blacklist current access token
-            tokenBlackListService.blacklistToken(token);
-
-            User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-            refreshTokenRepository.deleteByUser(user);
+            logoutService.logoutFromAllDevices(token);
 
             // TODO: In a full implementation, you'd also need to track and blacklist
             // all active access tokens for this user
 
-            log.info("User {} logged out from all devices", username);
-
             return ResponseEntity.ok(new MessageResponse(
                     "Logged out from all devices successfully"));
-        }catch(Exception e){
+        } catch (Exception e) {
             log.error("Logout from all devices failed: {}", e.getMessage());
             return ResponseEntity.internalServerError()
                     .body(new ErrorResponse("Logout failed"));
