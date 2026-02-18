@@ -1,5 +1,6 @@
 package com.github.grglucastr.bnauthservice.security;
 
+import com.github.grglucastr.bnauthservice.service.TokenBlackListService;
 import com.github.grglucastr.bnauthservice.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -24,6 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final TokenBlackListService tokenBlackListService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -43,6 +45,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         jwt = authHeader.substring(7);
 
         try {
+
+            if(tokenBlackListService.isTokenBlacklisted(jwt)){
+                log.error("Attempted to use a blacklisted token");
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Token has been revoked");
+                return;
+            }
+
             username = jwtUtil.extractUsername(jwt);
 
             // Username exists but it is not authenticated
