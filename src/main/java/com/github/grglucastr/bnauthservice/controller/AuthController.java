@@ -12,12 +12,16 @@ import com.github.grglucastr.bnauthservice.entity.EmailVerificationToken;
 import com.github.grglucastr.bnauthservice.entity.PasswordResetToken;
 import com.github.grglucastr.bnauthservice.entity.RefreshToken;
 import com.github.grglucastr.bnauthservice.entity.User;
+import com.github.grglucastr.bnauthservice.repository.RefreshTokenRepository;
+import com.github.grglucastr.bnauthservice.repository.UserRepository;
 import com.github.grglucastr.bnauthservice.service.EmailService;
 import com.github.grglucastr.bnauthservice.service.EmailVerificationService;
 import com.github.grglucastr.bnauthservice.service.PasswordResetService;
 import com.github.grglucastr.bnauthservice.service.RefreshTokenService;
+import com.github.grglucastr.bnauthservice.service.TokenBlackListService;
 import com.github.grglucastr.bnauthservice.service.UserService;
 import com.github.grglucastr.bnauthservice.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -54,6 +58,9 @@ public class AuthController {
     private final PasswordResetService passwordResetService;
     private final EmailService emailService;
     private final EmailVerificationService emailVerificationService;
+    private final TokenBlackListService tokenBlackListService;
+    private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @PostMapping(value = "/login",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -83,7 +90,7 @@ public class AuthController {
             log.error("Login failed for user: {}", login.username());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Invalid username or password"));
-        }catch(Exception e) {
+        } catch (Exception e) {
             log.error("Login failed for user {}: {}", login.username(), e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Account not verified. Please check your email."));
@@ -216,7 +223,8 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/verify-email")
+    @GetMapping(value = "/verify-email",
+            produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> verifyEmail(@RequestParam String token) {
         try {
             emailVerificationService.verifyEmail(token);
@@ -231,7 +239,9 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/resend-verification")
+    @PostMapping(value = "/resend-verification",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> resendVerification(@RequestBody Map<String, String> request) {
         try {
             String email = request.get("email");
@@ -253,6 +263,75 @@ public class AuthController {
                     .body(new ErrorResponse(e.getMessage()));
         }
     }
+
+    @PostMapping(value = "/logout",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        try{
+            String authHeader = request.getHeader("Authorization");
+
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.badRequest()
+                        .body(new ErrorResponse("No token provided"));
+            }
+
+            String token = authHeader.substring(7);
+
+            //Blacklist the access token
+            tokenBlackListService.blacklistToken(token);
+
+            // Revoke all refresh tokens for this user
+            String username = jwtUtil.extractUsername(token);
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            refreshTokenRepository.deleteByUser(user);
+
+            log.info("User {} logged out successfully", username);
+
+            return ResponseEntity.ok(new MessageResponse("Logged out successfully"));
+        }catch(Exception e){
+            log.error("Logout failed: {}", e.getMessage());
+            return ResponseEntity.internalServerError()
+                    .body(new ErrorResponse("Logout failed"));
+        }
+    }
+
+    @PostMapping(value = "/logout-all",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> logoutFromAllDevices(HttpServletRequest request) {
+        try{
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.badRequest()
+                        .body(new ErrorResponse("No token provided"));
+            }
+
+            String token = authHeader.substring(7);
+            String username = jwtUtil.extractUsername(token);
+
+            // Blacklist current access token
+            tokenBlackListService.blacklistToken(token);
+
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            refreshTokenRepository.deleteByUser(user);
+
+            // TODO: In a full implementation, you'd also need to track and blacklist
+            // all active access tokens for this user
+
+            log.info("User {} logged out from all devices", username);
+
+            return ResponseEntity.ok(new MessageResponse(
+                    "Logged out from all devices successfully"));
+        }catch(Exception e){
+            log.error("Logout from all devices failed: {}", e.getMessage());
+            return ResponseEntity.internalServerError()
+                    .body(new ErrorResponse("Logout failed"));
+        }
+    }
+
 
     @GetMapping(value = "/me", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCurrentUser() {
