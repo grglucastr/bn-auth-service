@@ -2,6 +2,8 @@
 Access control solution backend service to provide authorization and authentication to your RESTful endpoints. 
 Useful when you want to host a solution to handle an access verification before they reach your features or other microservices.
 
+![project_logo.png](project_logo.png)
+
 ## Tech Stack
 This project was developed using modern and mature technologies like:
 - Maven 3.9 (Building Tool)
