@@ -5,7 +5,8 @@ Backend service to provide authorization and authentication to your RESTful endp
 ## Features
 - Register User
 - Login
-- Refresh Token
+- Logout
+- JWT (Tokens and Refresh Tokens)
 - Role-Based Authorization
 - PostgreSQL Database Integration (JPA, Hibernate)
 - Password Recovery Flow
