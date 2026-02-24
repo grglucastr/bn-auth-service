@@ -32,7 +32,8 @@ beforehand if you want to do some customization, make maintenance or even submit
 - Role-Based Authorization
 - PostgreSQL Database Integration (JPA, Hibernate)
 - Password Recovery Flow
-- E-mail simulation
+- Send e-mail verification
+- 2FA with OTP code to e-mail
 
 ### Stateless
 The project uses JSON Web Token (JWT) and the authentication/authorization are stateless. 
