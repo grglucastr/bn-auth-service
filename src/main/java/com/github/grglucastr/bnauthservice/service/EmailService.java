@@ -41,4 +41,18 @@ public class EmailService {
         log.info("If you didn't request this, please ignore this email.");
         log.info("=".repeat(80));
     }
+
+    public void send2FACode(String email, String otpCode){
+        log.info("=".repeat(80));
+        log.info("📧 TWO-FACTOR AUTHENTICATION CODE (Simulated)");
+        log.info("To: {}", email);
+        log.info("Subject: Your Login Verification Code");
+        log.info("");
+        log.info("Your verification code is: {}", otpCode);
+        log.info("");
+        log.info("This code will expire in 5 minutes.");
+        log.info("If you didn't request this, please ignore this email.");
+        log.info("=".repeat(80));
+
+    }
 }

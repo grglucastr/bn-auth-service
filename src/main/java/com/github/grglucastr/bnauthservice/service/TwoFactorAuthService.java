@@ -59,8 +59,7 @@ public class TwoFactorAuthService {
         twoFactorRepository.save(twoFactorAuth);
 
         // Send OTP via email
-        // TODO: call email service here
-        // emailService.send2FACode(user.getEmail(), otpCode);
+        emailService.send2FACode(user.getEmail(), otpCode);
 
         log.info("OTP generated and sent to user: {}", username);
     }
