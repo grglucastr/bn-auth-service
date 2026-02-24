@@ -36,7 +36,7 @@ public class SecurityConfig {
                 "/api/v1/auth/verify-email",
                 "/api/v1/auth/resend-verification",
                 "/api/v1/auth/verify-2fa",
-                "/api/v1/auth/toggle-2fa"
+                "/api/v1/auth/resend-2fa"
         };
 
         http.authorizeHttpRequests(auth -> auth

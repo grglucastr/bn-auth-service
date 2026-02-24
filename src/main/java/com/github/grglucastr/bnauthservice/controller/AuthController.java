@@ -371,21 +371,42 @@ public class AuthController {
         }
     }
 
+    @PostMapping(value = "/resend-2fa",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> resend2FA(@RequestBody Map<String, String> request) {
+        try{
+            String username = request.get("username");
+
+            if (username == null || username.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(new ErrorResponse("Username is required."));
+            }
+
+            twoFactorAuthService.generateAndSendOTP(username);
+
+            return ResponseEntity.ok(new MessageResponse("2FA code resent successfully"));
+        }catch(Exception e){
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
     @PostMapping(value = "/toggle-2fa",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> toggle2FA(@RequestBody Enable2FARequest request) {
-        try{
+        try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
 
             twoFactorAuthService.toggle2FA(username, request.enable());
 
-            String message = request.enable() ? "Two-factor authentication enable successfully":
+            String message = request.enable() ? "Two-factor authentication enable successfully" :
                     "Two-factor authentication disable successfully";
 
             return ResponseEntity.ok(new MessageResponse(message));
-        }catch(Exception e) {
+        } catch (Exception e) {
             log.error("Failed to toggle 2FA: {}", e.getMessage());
             return ResponseEntity.internalServerError()
                     .body(new ErrorResponse("Failed to update 2FA settings"));
