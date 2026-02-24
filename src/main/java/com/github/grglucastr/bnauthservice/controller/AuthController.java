@@ -8,6 +8,7 @@ import com.github.grglucastr.bnauthservice.dtos.MessageResponse;
 import com.github.grglucastr.bnauthservice.dtos.RegisterRequest;
 import com.github.grglucastr.bnauthservice.dtos.RegisterResponse;
 import com.github.grglucastr.bnauthservice.dtos.ResetPasswordRequest;
+import com.github.grglucastr.bnauthservice.dtos.TwoFactorResponse;
 import com.github.grglucastr.bnauthservice.entity.EmailVerificationToken;
 import com.github.grglucastr.bnauthservice.entity.PasswordResetToken;
 import com.github.grglucastr.bnauthservice.entity.RefreshToken;
@@ -17,6 +18,7 @@ import com.github.grglucastr.bnauthservice.service.EmailVerificationService;
 import com.github.grglucastr.bnauthservice.service.LogoutService;
 import com.github.grglucastr.bnauthservice.service.PasswordResetService;
 import com.github.grglucastr.bnauthservice.service.RefreshTokenService;
+import com.github.grglucastr.bnauthservice.service.TwoFactorAuthService;
 import com.github.grglucastr.bnauthservice.service.UserService;
 import com.github.grglucastr.bnauthservice.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -57,6 +59,7 @@ public class AuthController {
     private final EmailService emailService;
     private final EmailVerificationService emailVerificationService;
     private final LogoutService logoutService;
+    private final TwoFactorAuthService twoFactorAuthService;
 
     @PostMapping(value = "/login",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -69,8 +72,22 @@ public class AuthController {
                             login.username(), login.password()
                     ));
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(login.username());
+            // Check if user has 2FA enabled
+            if (twoFactorAuthService.is2FAEnabled(login.username())) {
+                // Generate and send OTP
+                twoFactorAuthService.generateAndSendOTP(login.username());
 
+                log.info("2FA required for user: {}", login.username());
+
+                return ResponseEntity.ok(new TwoFactorResponse(
+                        "2FA code sent to your email. Please verify to complete login.",
+                        true,
+                        login.username()
+                ));
+            }
+
+            // No 2FA - proceed with normal login
+            UserDetails userDetails = userDetailsService.loadUserByUsername(login.username());
             String token = jwtUtil.generateAccessToken(userDetails);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername());
 
