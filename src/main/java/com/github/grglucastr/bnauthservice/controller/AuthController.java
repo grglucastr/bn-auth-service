@@ -1,5 +1,6 @@
 package com.github.grglucastr.bnauthservice.controller;
 
+import com.github.grglucastr.bnauthservice.dtos.Enable2FARequest;
 import com.github.grglucastr.bnauthservice.dtos.ErrorResponse;
 import com.github.grglucastr.bnauthservice.dtos.ForgotPasswordRequest;
 import com.github.grglucastr.bnauthservice.dtos.LoginRequest;
@@ -9,6 +10,7 @@ import com.github.grglucastr.bnauthservice.dtos.RegisterRequest;
 import com.github.grglucastr.bnauthservice.dtos.RegisterResponse;
 import com.github.grglucastr.bnauthservice.dtos.ResetPasswordRequest;
 import com.github.grglucastr.bnauthservice.dtos.TwoFactorResponse;
+import com.github.grglucastr.bnauthservice.dtos.TwoFactorVerifyRequest;
 import com.github.grglucastr.bnauthservice.entity.EmailVerificationToken;
 import com.github.grglucastr.bnauthservice.entity.PasswordResetToken;
 import com.github.grglucastr.bnauthservice.entity.RefreshToken;
@@ -324,7 +326,6 @@ public class AuthController {
         }
     }
 
-
     @GetMapping(value = "/me", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getCurrentUser() {
 
@@ -339,4 +340,55 @@ public class AuthController {
                 "authorities", authentication.getAuthorities()));
     }
 
+    @PostMapping(value = "/verify-2fa",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> verify2FA(@RequestBody TwoFactorVerifyRequest request) {
+        try {
+            // Verify OTP
+            boolean verified = twoFactorAuthService.verifyOTP(request.username(), request.otpCode());
+            if (!verified) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ErrorResponse("Invalid or expired OTP code"));
+            }
+
+            UserDetails userDetails = userDetailsService.loadUserByUsername(request.username());
+            String accessToken = jwtUtil.generateAccessToken(userDetails);
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(request.username());
+
+            log.info("User {} completed 2FA login successfully", request.username());
+
+            return ResponseEntity.ok(new LoginResponse(
+                    "Login successful!",
+                    request.username(),
+                    accessToken,
+                    refreshToken.getToken()
+            ));
+        } catch (Exception e) {
+            log.error("2FA verification failed: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse("2FA verification failed"));
+        }
+    }
+
+    @PostMapping(value = "/toggle-2fa",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> toggle2FA(@RequestBody Enable2FARequest request) {
+        try{
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+
+            twoFactorAuthService.toggle2FA(username, request.enable());
+
+            String message = request.enable() ? "Two-factor authentication enable successfully":
+                    "Two-factor authentication disable successfully";
+
+            return ResponseEntity.ok(new MessageResponse(message));
+        }catch(Exception e) {
+            log.error("Failed to toggle 2FA: {}", e.getMessage());
+            return ResponseEntity.internalServerError()
+                    .body(new ErrorResponse("Failed to update 2FA settings"));
+        }
+    }
 }
