@@ -143,35 +143,6 @@ public class AuthController {
         }
     }
 
-    @PostMapping(value = "/register",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        try {
-            User user = userService.registerUser(
-                    request.username(),
-                    request.email(),
-                    request.password()
-            );
-
-            // Create verification token
-            EmailVerificationToken verificationToken = emailVerificationService.createVerificationToken(user);
-
-            // Send verification email
-            emailService.sendVerificationEmail(user.getEmail(), verificationToken.getToken());
-
-            log.info("User {} registered successfully", user.getUsername());
-
-            return ResponseEntity.ok(new RegisterResponse("User registered successfully!",
-                    user.getUsername(),
-                    user.getEmail()));
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(new ErrorResponse(e.getMessage()));
-        }
-    }
-
     @PostMapping(value = "/forgot-password",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
