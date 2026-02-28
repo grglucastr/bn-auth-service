@@ -5,7 +5,6 @@ import com.github.grglucastr.bnauthservice.dtos.ErrorResponse;
 import com.github.grglucastr.bnauthservice.dtos.LoginRequest;
 import com.github.grglucastr.bnauthservice.dtos.LoginResponse;
 import com.github.grglucastr.bnauthservice.dtos.MessageResponse;
-import com.github.grglucastr.bnauthservice.dtos.ResetPasswordRequest;
 import com.github.grglucastr.bnauthservice.dtos.TwoFactorResponse;
 import com.github.grglucastr.bnauthservice.dtos.TwoFactorVerifyRequest;
 import com.github.grglucastr.bnauthservice.entity.EmailVerificationToken;
@@ -17,7 +16,6 @@ import com.github.grglucastr.bnauthservice.service.LogoutService;
 import com.github.grglucastr.bnauthservice.service.PasswordResetService;
 import com.github.grglucastr.bnauthservice.service.RefreshTokenService;
 import com.github.grglucastr.bnauthservice.service.TwoFactorAuthService;
-import com.github.grglucastr.bnauthservice.service.UserService;
 import com.github.grglucastr.bnauthservice.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +48,6 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
-    private final UserService userService;
     private final RefreshTokenService refreshTokenService;
     private final PasswordResetService passwordResetService;
     private final EmailService emailService;
@@ -135,25 +132,6 @@ public class AuthController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse(e.getMessage()));
-        }
-    }
-
-    @PostMapping(value = "/reset-password",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
-        try {
-
-            passwordResetService.resetPassword(request.token(), request.newPassword());
-
-            return ResponseEntity.ok(new MessageResponse(
-                    "Password has been reset successfully. You can login now with your new password."));
-
-        } catch (IllegalArgumentException e) {
-            log.error("Password reset failed: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                    .body(new ErrorResponse(e.getMessage()));
-
         }
     }
 
