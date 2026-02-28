@@ -12,10 +12,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -25,25 +29,6 @@ public class PasswordRecoveryController {
 
     private final PasswordResetService passwordResetService;
     private final EmailService emailService;
-
-    @PutMapping(value = "/reset-requests",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updatePassword(@RequestBody ResetPasswordRequest request) {
-        try {
-
-            passwordResetService.resetPassword(request.token(), request.newPassword());
-
-            return ResponseEntity.ok(new MessageResponse(
-                    "Password has been reset successfully. You can login now with your new password."));
-
-        } catch (IllegalArgumentException e) {
-            log.error("Password reset failed: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                    .body(new ErrorResponse(e.getMessage()));
-
-        }
-    }
 
     @RequestMapping(value = "/reset-requests",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -67,6 +52,46 @@ public class PasswordRecoveryController {
             return ResponseEntity.ok(new MessageResponse(
                     "If your email exists in our system, you will receive a password reset link"
             ));
+        }
+    }
+
+    @PutMapping(value = "/reset-requests",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> updatePassword(@RequestBody ResetPasswordRequest request) {
+        try {
+
+            passwordResetService.resetPassword(request.token(), request.newPassword());
+
+            return ResponseEntity.ok(new MessageResponse(
+                    "Password has been reset successfully. You can login now with your new password."));
+
+        } catch (IllegalArgumentException e) {
+            log.error("Password reset failed: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(new ErrorResponse(e.getMessage()));
+
+        }
+    }
+
+    @GetMapping(value = "/reset-tokens",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> checkTokens(@RequestParam String token) {
+        try {
+            PasswordResetToken resetToken = passwordResetService.verifyToken(token);
+
+            return ResponseEntity.ok(Map.of(
+                    "valild", true,
+                    "email", resetToken.getUser().getEmail(),
+                    "expiresAt", resetToken.getExpiresAt()
+            ));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of(
+                            "valid", false,
+                            "error", e.getMessage()
+                    ));
         }
     }
 }
