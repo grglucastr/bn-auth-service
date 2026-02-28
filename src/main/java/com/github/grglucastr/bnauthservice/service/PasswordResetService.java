@@ -73,7 +73,7 @@ public class PasswordResetService {
 
         if (resetToken.isInvalid()) {
             log.error("Token is used or expired.");
-            throw new IllegalStateException("Password reset token is expired or already used");
+            throw new IllegalArgumentException("Password reset token is expired or already used");
         }
 
         return resetToken;
