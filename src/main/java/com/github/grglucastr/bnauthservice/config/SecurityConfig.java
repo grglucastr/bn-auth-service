@@ -29,7 +29,6 @@ public class SecurityConfig {
         final String[] routesAllowed = new String[]{
                 "/api/v1/auth/login",
                 "/api/v1/auth/refresh",
-                "/api/v1/auth/forgot-password",
                 "/api/v1/auth/reset-password",
                 "/api/v1/auth/verify-reset-token",
                 "/api/v1/auth/verify-email",
@@ -37,6 +36,7 @@ public class SecurityConfig {
                 "/api/v1/auth/verify-2fa",
                 "/api/v1/auth/resend-2fa",
                 "/api/v1/registrations",
+                "/api/v1/passwords/reset-requests",
         };
 
         http.authorizeHttpRequests(auth -> auth

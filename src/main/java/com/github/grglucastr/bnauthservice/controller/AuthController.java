@@ -2,19 +2,15 @@ package com.github.grglucastr.bnauthservice.controller;
 
 import com.github.grglucastr.bnauthservice.dtos.Enable2FARequest;
 import com.github.grglucastr.bnauthservice.dtos.ErrorResponse;
-import com.github.grglucastr.bnauthservice.dtos.ForgotPasswordRequest;
 import com.github.grglucastr.bnauthservice.dtos.LoginRequest;
 import com.github.grglucastr.bnauthservice.dtos.LoginResponse;
 import com.github.grglucastr.bnauthservice.dtos.MessageResponse;
-import com.github.grglucastr.bnauthservice.dtos.RegisterRequest;
-import com.github.grglucastr.bnauthservice.dtos.RegisterResponse;
 import com.github.grglucastr.bnauthservice.dtos.ResetPasswordRequest;
 import com.github.grglucastr.bnauthservice.dtos.TwoFactorResponse;
 import com.github.grglucastr.bnauthservice.dtos.TwoFactorVerifyRequest;
 import com.github.grglucastr.bnauthservice.entity.EmailVerificationToken;
 import com.github.grglucastr.bnauthservice.entity.PasswordResetToken;
 import com.github.grglucastr.bnauthservice.entity.RefreshToken;
-import com.github.grglucastr.bnauthservice.entity.User;
 import com.github.grglucastr.bnauthservice.service.EmailService;
 import com.github.grglucastr.bnauthservice.service.EmailVerificationService;
 import com.github.grglucastr.bnauthservice.service.LogoutService;
@@ -36,7 +32,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -140,31 +135,6 @@ public class AuthController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse(e.getMessage()));
-        }
-    }
-
-    @PostMapping(value = "/forgot-password",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
-        try {
-
-            PasswordResetToken resetToken = passwordResetService
-                    .createPasswordResetToken(request.email());
-
-            emailService.sendPasswordResetEmail(request.email(), resetToken.getToken());
-
-            log.info("Password reset requested for email: {}", request.email());
-
-            return ResponseEntity.ok(new MessageResponse(
-                    "If your email exists in our system, you will receive a password password reset link"
-            ));
-
-        } catch (UsernameNotFoundException e) {
-            log.error("Password reset requested for non-existent email: {}", request.email());
-            return ResponseEntity.ok(new MessageResponse(
-                    "If your email exists in our system, you will receive a password reset link"
-            ));
         }
     }
 
@@ -346,7 +316,7 @@ public class AuthController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> resend2FA(@RequestBody Map<String, String> request) {
-        try{
+        try {
             String username = request.get("username");
 
             if (username == null || username.isEmpty()) {
@@ -357,7 +327,7 @@ public class AuthController {
             twoFactorAuthService.generateAndSendOTP(username);
 
             return ResponseEntity.ok(new MessageResponse("2FA code resent successfully"));
-        }catch(Exception e){
+        } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(new ErrorResponse(e.getMessage()));
         }
