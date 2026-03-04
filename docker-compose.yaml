@@ -23,6 +23,7 @@ services:
 
   app:
     build: .
+    container_name: 'bn-auth-service'
     depends_on:
       - pgserver
       - redis
