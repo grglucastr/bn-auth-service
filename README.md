@@ -44,18 +44,18 @@ When the user makes login the response body brings a ```token``` and ```refreshT
 ### Environment Variables
 You might want to configure the environment variables accordingly to your case. Please make sure to export these variables
 
-| **Variable Name**                 | **Description**                                                                                         | **Default Value** |
-|-----------------------------------|---------------------------------------------------------------------------------------------------------|-------------------|
-| APP_TIMEZONE                      | Defines the app timezone. It usually necessary when persisting data.                                    | America/Sao_Paulo |
-| POSTGRESQL_DB_URL                 | PostgreSQL database URL server. If not informed, then system will use the container address 'pgserver'. | pgserver          |
-| POSTGRESQL_DB_USER                | PostgreSQL database user.                                                                               | bn                |
-| POSTGRESQL_DB_PASSWORD            | PostgreSQL database password.                                                                           | secret123         |
-| SHOW_SQL                          | Set to true if you want to see SQL commands printed it out in logs                                      | false             |
-| REDIS_HOST                        | Redis database URL server. If not informed, then system will use the container address 'redis'.         | redis             |
-| REDIS_PORT                        | Redis database port.                                                                                    | 6379              |
-| JWT_SECRET                        | Secret key to sign the brand new generated JWT tokens.                                                  | mySecretKey       |
-| JWT_ACCESS_TOKEN_EXPIRATION_TIME  | Configuration to set the token expiration time in milliseconds.                                         | 900000            |
-| JWT_REFRESH_TOKEN_EXPIRATION_TIME | Configuration to set the refresh token expiration time in milliseconds.                                 | 604800000         |
+| **Variable Name**                 | **Description**                                                                                                                                   | **Default Value** |
+|-----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|-------------------|
+| APP_TIMEZONE                      | Defines the app timezone. It usually necessary when persisting data.                                                                              | America/Sao_Paulo |
+| POSTGRESQL_DB_URL                 | PostgreSQL database URL server (jdbc:postgresql://localhost:5432/bnauth). If not informed, then system will use the container address 'pgserver'. | pgserver          |
+| POSTGRESQL_DB_USER                | PostgreSQL database user.                                                                                                                         | bn                |
+| POSTGRESQL_DB_PASSWORD            | PostgreSQL database password.                                                                                                                     | secret123         |
+| SHOW_SQL                          | Set to true if you want to see SQL commands printed it out in logs                                                                                | false             |
+| REDIS_HOST                        | Redis database URL server. If not informed, then system will use the container address 'redis'.                                                   | redis             |
+| REDIS_PORT                        | Redis database port.                                                                                                                              | 6379              |
+| JWT_SECRET                        | Secret key to sign the brand new generated JWT tokens.                                                                                            | mySecretKey       |
+| JWT_ACCESS_TOKEN_EXPIRATION_TIME  | Configuration to set the token expiration time in milliseconds.                                                                                   | 900000            |
+| JWT_REFRESH_TOKEN_EXPIRATION_TIME | Configuration to set the refresh token expiration time in milliseconds.                                                                           | 604800000         |
 
 ### Run in your hosted environment
 If you have Docker and Docker Compose installed, simply run 
