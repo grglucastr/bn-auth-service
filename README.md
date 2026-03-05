@@ -53,7 +53,7 @@ You might want to configure the environment variables accordingly to your case. 
 | SHOW_SQL                          | Set to true if you want to see SQL commands printed it out in logs                                      | false             |
 | REDIS_HOST                        | Redis database URL server. If not informed, then system will use the container address 'redis'.         | redis             |
 | REDIS_PORT                        | Redis database port.                                                                                    | 6379              |
-| JWT_SECRET                        | Secret phrase to generate JWT tokens.                                                                   | mySecretKey       |
+| JWT_SECRET                        | Secret key to sign the brand new generated JWT tokens.                                                  | mySecretKey       |
 | JWT_ACCESS_TOKEN_EXPIRATION_TIME  | Configuration to set the token expiration time in milliseconds.                                         | 900000            |
 | JWT_REFRESH_TOKEN_EXPIRATION_TIME | Configuration to set the refresh token expiration time in milliseconds.                                 | 604800000         |
 
