@@ -27,6 +27,26 @@ data:
         max-idle: 8
         min-idle: 0
 
+security:
+  oauth2:
+    client:
+      registration:
+        google:
+          client-id: ${GOOGLE_CLIENT_ID}
+          client-secret: ${GOOGLE_CLIENT_SECRET}
+          scope:
+            - email
+            - profile
+          redirect-uri: "${baseUrl}/login/oauth2/code/{registrationId}"
+
+        github:
+          client-id: ${GITHUB_CLIENT_ID}
+          client-secret: ${GITHUB_CLIENT_SECRET}
+          scope:
+            -read:user
+            -read:email
+          redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+
 jwt:
   secret: ${JWT_SECRET:myVerySecretKeyThatIsAtLeast256BitsLongForHS256Algorithm}
   access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION_TIME:900000}
