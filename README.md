@@ -1,11 +1,15 @@
 # RESTful Auth Service
-Access control solution backend service to provide authorization and authentication to your RESTful endpoints. 
-Useful when you want to host a solution to handle an access verification before they reach your features or other microservices.
+
+Access control solution backend service to provide authorization and authentication to your RESTful endpoints.
+Useful when you want to host a solution to handle an access verification before they reach your features or other
+microservices.
 
 ![project_logo.png](project_logo.png)
 
 ## Tech Stack
+
 This project was developed using modern and mature technologies like:
+
 - Maven 3.9 (Building Tool)
 - Java JDK 25
 - Spring Boot 4
@@ -16,8 +20,10 @@ This project was developed using modern and mature technologies like:
 - Docker for containerization
 
 ## Prerequisites
+
 As this project aims for those who wants to self-host an access control solution you have to have these tools installed
 beforehand if you want to do some customization, make maintenance or even submit a contribution:
+
 - Docker
 - JDK 25
 - Maven 3.9.11
@@ -25,6 +31,7 @@ beforehand if you want to do some customization, make maintenance or even submit
 - Redis 8.2.4
 
 ## Features
+
 - Register User
 - Login
 - Logout
@@ -36,13 +43,16 @@ beforehand if you want to do some customization, make maintenance or even submit
 - 2FA with OTP code to e-mail
 
 ### Stateless
-The project uses JSON Web Token (JWT) and the authentication/authorization are stateless. 
+
+The project uses JSON Web Token (JWT) and the authentication/authorization are stateless.
 When the user makes login the response body brings a ```token``` and ```refreshToken```.
 
 ## Usage
 
 ### Environment Variables
-You might want to configure the environment variables accordingly to your case. Please make sure to export these variables
+
+You might want to configure the environment variables accordingly to your case. Please make sure to export these
+variables
 
 | **Variable Name**                 | **Description**                                                                                                                                       | **Default Value** |
 |-----------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------|
@@ -53,13 +63,18 @@ You might want to configure the environment variables accordingly to your case. 
 | SHOW_SQL                          | Set to true if you want to see SQL commands printed it out in logs                                                                                    | false             |
 | REDIS_HOST                        | Redis database URL server. If not informed, then system will use the container address 'redis'.                                                       | redis             |
 | REDIS_PORT                        | Redis database port.                                                                                                                                  | 6379              |
+| GOOGLE_CLIENT_ID                  | Your Key for Google OAuth2.                                                                                                                           | null              |
+| GOOGLE_CLIENT_SECRET              | Your Secret Key for Google OAuth2.                                                                                                                    | null              |
+| GITHUB_CLIENT_ID                  | Your Key for GitHub OAuth2.                                                                                                                           | null              |
+| GITHUB_CLIENT_SECRET              | Your Secret Key for GitHub OAuth2.                                                                                                                    | null              |
 | JWT_SECRET                        | Secret key to sign the brand new generated JWT tokens.                                                                                                | mySecretKey       |
 | JWT_ACCESS_TOKEN_EXPIRATION_TIME  | Configuration to set the token expiration time in milliseconds.                                                                                       | 900000            |
 | JWT_REFRESH_TOKEN_EXPIRATION_TIME | Configuration to set the refresh token expiration time in milliseconds.                                                                               | 604800000         |
 
 ### Run in your hosted environment
-If you have Docker and Docker Compose installed, simply run 
-```docker-compose up -d``` in the project folder so you can have the API up and running. 
+
+If you have Docker and Docker Compose installed, simply run
+```docker-compose up -d``` in the project folder so you can have the API up and running.
 
 ## Installation
 
