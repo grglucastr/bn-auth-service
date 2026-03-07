@@ -45,8 +45,11 @@ public class OAuth2Provider {
     @Column(name = "provider_email")
     private String providerEmail;
 
-    @Column(name = "provider_picture")
+    @Column(name = "provider_name")
     private String providerName;
+
+    @Column(name = "provider_picture")
+    private String providerPicture;
 
     @Column(name = "access_token", length = 1000)
     private String accessToken; //Optional: store for API calls
@@ -58,13 +61,13 @@ public class OAuth2Provider {
     private LocalDateTime updatedAt;
 
     @PrePersist
-    protected void onCreate(){
+    protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
-    protected void onUpdate(){
+    protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
 }
